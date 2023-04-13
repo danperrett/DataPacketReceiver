@@ -1,19 +1,53 @@
 #include <iostream>
 #include <thread>
+#include <fstream>
 #include <boost/asio.hpp>
 #include <boost/endian/conversion.hpp>
+#include <boost/filesystem.hpp>
 
 #include "DataPacketReceiver.h"
 
 using namespace boost::asio;
 using ip::tcp;
 
+static const std::string LOCATION = "/mnt/buffer/";
+
+std::string CheckFilePath(const DataHeaderStruct & header)
+{
+    std::string filePath = LOCATION + header.userName;
+    if ( !boost::filesystem::exists( filePath ) )
+    {
+        boost::filesystem::create_directory(filePath);
+        filePath += "/" + std::to_string(header.id);
+        boost::filesystem::create_directory(filePath);
+    }
+    else
+    {
+        filePath += "/" + std::to_string(header.id);
+        if ( !boost::filesystem::exists( filePath ) )
+        {
+            boost::filesystem::create_directory(filePath);
+        }
+    }
+    return filePath + "/";
+}
 void SendDataToFileSystem(const DataHeaderStruct & header, const char * data)
 {
-    std::cout << data << std::endl;
+ //   std::cout << data << std::endl;
+    std::string path = CheckFilePath(header);
+    if(header.fileNameLength > 0)
+    {
+        if(header.type == 1)
+        {
+            path += header.fileName;
+            std::ofstream file(path);
+            file << data;
+            file.close();
+        }
+    }
 }
 
-void GetInformation(tcp::socket socket)
+tcp::socket GetInformation(tcp::socket socket)
 {
     std::size_t headerLengthSize = 8;	
     std::int64_t headerLength;
@@ -70,14 +104,12 @@ void GetInformation(tcp::socket socket)
      
         const char* data = boost::asio::buffer_cast<const char*>(dataBuf.data());
         SendDataToFileSystem(header, data);
-        std::string msgBack = "Received OK";
-        char * buffer = new char[strlen(msgBack.c_str())];
-        std::memcpy(buffer, msgBack.c_str(), strlen(msgBack.c_str()));
-        boost::asio::write( socket, boost::asio::buffer(buffer, strlen(msgBack.c_str())));
+        
     }
     else
     {
     }
+    return std::move(socket);
 }
 
 
@@ -88,13 +120,18 @@ void HandleConnection(tcp::socket socket)
     std::string msgBack = "Received OK";
     try
     {
-        GetInformation(std::move(socket));
+        socket = GetInformation(std::move(socket));
+        std::string msgBack = "Received OK";
+        
     }
     catch(...)
     {
         error = true;
         msgBack = "Error";
     }
+    char * buffer = new char[strlen(msgBack.c_str())];
+    std::memcpy(buffer, msgBack.c_str(), strlen(msgBack.c_str()));
+    boost::asio::write( socket, boost::asio::buffer(buffer, strlen(msgBack.c_str())));
   
 }
 
