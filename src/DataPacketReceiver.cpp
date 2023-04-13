@@ -8,7 +8,12 @@
 using namespace boost::asio;
 using ip::tcp;
 
-DataHeaderStruct GetHeaderInformation(tcp::socket socket)
+void SendDataToFileSystem(const DataHeaderStruct & header, const char * data)
+{
+    std::cout << data << std::endl;
+}
+
+void GetInformation(tcp::socket socket)
 {
     std::size_t headerLengthSize = 8;	
     std::int64_t headerLength;
@@ -60,24 +65,37 @@ DataHeaderStruct GetHeaderInformation(tcp::socket socket)
                   boost::asio::buffer_cast<const char*>(buf.data()) + totalLength, userNameSize);
     if(header.requestType == 0)
     {   /// Put request
-    //    putData(header, std::move(socket));
-        boost::asio::read(socket, buf, boost::asio::transfer_exactly(header.dataLength));
+        boost::asio::streambuf dataBuf;
+        boost::asio::read(socket, dataBuf, boost::asio::transfer_exactly(header.dataLength));
      
-        const char* data = boost::asio::buffer_cast<const char*>(buf.data());
-        std::cout << data << std::endl;
+        const char* data = boost::asio::buffer_cast<const char*>(dataBuf.data());
+        SendDataToFileSystem(header, data);
+        std::string msgBack = "Received OK";
+        char * buffer = new char[strlen(msgBack.c_str())];
+        std::memcpy(buffer, msgBack.c_str(), strlen(msgBack.c_str()));
+        boost::asio::write( socket, boost::asio::buffer(buffer, strlen(msgBack.c_str())));
     }
     else
     {
     }
-
-    return header;
 }
 
 
-void handle_connection(tcp::socket socket) 
+void HandleConnection(tcp::socket socket) 
 {
     std::cout << "New connection from " << socket.remote_endpoint().address().to_string() << std::endl;
-    DataHeaderStruct header = GetHeaderInformation(std::move(socket));
+    bool error = false;
+    std::string msgBack = "Received OK";
+    try
+    {
+        GetInformation(std::move(socket));
+    }
+    catch(...)
+    {
+        error = true;
+        msgBack = "Error";
+    }
+  
 }
 
 int main() 
@@ -90,8 +108,8 @@ int main()
       tcp::socket socket(service);
       acceptor.accept(socket);
 
-      std::thread t(handle_connection, std::move(socket));
-      t.detach();
+      std::thread thread(HandleConnection, std::move(socket));
+      thread.detach();
   }
 
   return 0;
