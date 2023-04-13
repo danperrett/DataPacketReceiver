@@ -31,7 +31,7 @@ std::string CheckFilePath(const DataHeaderStruct & header)
     }
     return filePath + "/";
 }
-void SendDataToFileSystem(const DataHeaderStruct & header, const char * data)
+void SendDataToFileSystem(const DataHeaderStruct & header, const std::vector<uint8_t> &bytes)
 {
  //   std::cout << data << std::endl;
     std::string path = CheckFilePath(header);
@@ -40,8 +40,8 @@ void SendDataToFileSystem(const DataHeaderStruct & header, const char * data)
         if(header.type == 1)
         {
             path += header.fileName;
-            std::ofstream file(path);
-            file << data;
+            std::ofstream file(path, std::ios::binary);
+            file.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
             file.close();
         }
     }
@@ -100,10 +100,9 @@ tcp::socket GetInformation(tcp::socket socket)
     if(header.requestType == 0)
     {   /// Put request
         boost::asio::streambuf dataBuf;
-        boost::asio::read(socket, dataBuf, boost::asio::transfer_exactly(header.dataLength));
-     
-        const char* data = boost::asio::buffer_cast<const char*>(dataBuf.data());
-        SendDataToFileSystem(header, data);
+        std::size_t receivedSize = boost::asio::read(socket, dataBuf, boost::asio::transfer_exactly(header.dataLength));
+        std::vector<uint8_t> bytes(boost::asio::buffers_begin(dataBuf.data()), boost::asio::buffers_end(dataBuf.data()));    
+        SendDataToFileSystem(header, bytes);
         
     }
     else
