@@ -7,6 +7,14 @@
 #include <stdexcept>
 #include <string>
 
+enum RequestType : std::uint8_t
+{
+    PUT = 0,
+    GET = 1,
+    LIST = 2, 
+    RESPOND = 3
+};
+
 #pragma pack(1)
 struct DataHeaderStruct
 { 

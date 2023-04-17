@@ -7,8 +7,9 @@
 #                           https://www.apsensing.com
 #------------------------------------------------------------------------------
 
-file(GLOB RECV_SOURCE DataPacketReceiver.cpp)
-file(GLOB SEND_SOURCE DataPacketSender.cpp)
+file(GLOB RECV_SOURCE DataPacketReceiver.cpp DataSender.cpp DataReceiver.cpp FileCheckUtility.cpp)
+file(GLOB SEND_SOURCE DataPacketSender.cpp DataReceiver.cpp  FileCheckUtility.cpp DataSender.cpp)
+list(REMOVE_ITEM RECV_SOURCE DataPacketSender.cpp)
 
 # HDF5 test utility
 add_executable(DataPacketReceiver ${RECV_SOURCE})
