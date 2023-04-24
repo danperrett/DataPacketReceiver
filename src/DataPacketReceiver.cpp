@@ -7,24 +7,12 @@
 #include "DataPacketReceiver.h"
 #include "DataReceiver.h"
 #include "DataSender.h"
+#include "FileCheckUtility.h"
 
 
 using namespace boost::asio;
 using ip::tcp;
 
-/*tcp::socket DataReceiver::GetDataFromFileSystem(const DataHeaderStruct & header, tcp::socket socket)
-{
-    std::string path = CheckFilePath(header);
-    std::ifstream input(filepath.string(), std::ios::binary);
-
-     if (!input.is_open()) 
-     {
-          std::cout << "Failed to open file: " << argv[1] << "\n";
-          return std::move(socket);
-     }
-
-    return std::move(socket);
-}*/
 
 //-----------------------------------------------------------------------------
 void HandleConnection(tcp::socket socket) 
@@ -55,12 +43,13 @@ void HandleConnection(tcp::socket socket)
            
             std::size_t size;
             std::string filePath = sender.GetFilePath(header, size);
-            socket = sender.SendDataToSocket(std::move(socket), filePath, size, header.id);
+            socket = sender.SendDataToSocket(std::move(socket), filePath, size, header.id, GET);
         }
         break;
         case LIST:
         {
-
+            std::string userFiles = GetListOfUserFiles(std::string(header.userName));
+            socket = sender.SendResponseToSocket(std::move(socket), header, userFiles);
         }
         break;
         default:
