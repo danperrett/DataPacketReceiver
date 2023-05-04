@@ -42,4 +42,7 @@ class DataSender
 
         ///
         tcp::socket SendResponseToSocket(tcp::socket socket, DataHeaderStruct & header, const std::string & message);
+
+        ///
+        tcp::socket GetDataFromSocket(tcp::socket socket, const std::string & fileName, const std::uint16_t id, const RequestType type);
 };
