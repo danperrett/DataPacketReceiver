@@ -87,7 +87,10 @@ int main(int argc, char* argv[])
           {
                boost::asio::streambuf dataBuf;
                std::size_t receivedSize = boost::asio::read(socket, dataBuf, boost::asio::transfer_exactly(header.dataLength));
-               const char* data = boost::asio::buffer_cast<const char*>(dataBuf.data());
+               std::vector<uint8_t> bytes(boost::asio::buffers_begin(dataBuf.data()), boost::asio::buffers_end(dataBuf.data())); 
+               std::ofstream file(header.fileName, std::ios::binary);
+               file.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+               file.close();
           }
           break;
           case RESPOND:

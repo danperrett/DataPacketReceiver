@@ -40,7 +40,6 @@ void HandleConnection(tcp::socket socket)
         break;
         case  GET:
         {
-           
             std::size_t size;
             std::string filePath = sender.GetFilePath(header, size);
             socket = sender.SendDataToSocket(std::move(socket), filePath, size, header.id, GET);
