@@ -68,7 +68,8 @@ int main(int argc, char* argv[])
 //socket creation
      tcp::socket socket(io_service);
 //connection
-     socket.connect( tcp::endpoint( boost::asio::ip::address::from_string("188.166.158.22"), 12345 ));
+     socket.connect( tcp::endpoint( boost::asio::ip::address::from_string("86.8.162.184"), 12345 ));
+     //socket.connect( tcp::endpoint( boost::asio::ip::address::from_string("127.0.0.1"), 12345 ));
      DataSender sender;
      if(static_cast<RequestType>(type) == 0)
      {
